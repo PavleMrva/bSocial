@@ -1,0 +1,47 @@
+{% extends "main/base.html" %}
+
+{% block tile %}Posts{% endblock %}
+
+{% block content %}
+<div class="row mt-3">
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3>Create New Post</h3>
+            </div>
+            <div class="card-body">
+                <textarea class="form-control" name="" id="" cols="30" rows="3"
+                          placeholder="What's on your mind?"></textarea>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-info">Submit</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3"></div>
+</div>
+<div class="row mt-3">
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <span class="align-middle">Ivan Kotlaja</span>
+                <span class="">10 minutes ago</span>
+            </div>
+            <div class="card-body">
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eaque fuga itaque quaerat velit vitae?
+                    Asperiores, at ducimus ea esse explicabo facilis maiores nam non optio quas quia rem repellendus
+                    tempora?</p>
+            </div>
+            <div class="card-footer">
+                <div class="float-right">
+                    <a href="#"><span class="align-middle"><i class="fa fa-comment fa-lg text-info"></i> 2</span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3"></div>
+</div>
+{% endblock %}
+

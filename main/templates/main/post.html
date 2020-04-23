@@ -1,0 +1,90 @@
+{% extends "main/base.html" %}
+
+{% block tile %}Posts{% endblock %}
+
+{% block content %}
+<div class="row mt-3">
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <span class="align-middle">Ivan Kotlaja</span>
+                <span class="">10 minutes ago</span>
+            </div>
+            <div class="card-body">
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eaque fuga itaque quaerat velit vitae?
+                    Asperiores, at ducimus ea esse explicabo facilis maiores nam non optio quas quia rem repellendus
+                    tempora?</p>
+            </div>
+            <div class="card-footer">
+
+                <div class="form-group">
+                <textarea class="form-control" name="" id="" cols="30" rows="3"
+                          placeholder="Comment here..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-info">Reply</button>
+            </div>
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+                    <p class="mb-1">Donec id elit non mi porta gravida at eget metus. Maecenas sed diam eget
+                        risus
+                        varius blandit.</p>
+                    <div class="d-flex w-100 justify-content-between">
+                        <small class="text-strong">Predrag Djurovic</small>
+                        <small class="text-muted">3 days ago</small>
+                    </div>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+                    <p class="mb-1">Donec id elit non mi porta gravida at eget metus. Maecenas sed diam eget
+                        risus
+                        varius blandit.</p>
+                    <div class="d-flex w-100 justify-content-between">
+                        <small class="text-strong">Predrag Djurovic</small>
+                        <small class="text-muted">3 days ago</small>
+                    </div>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+                    <p class="mb-1">Donec id elit non mi porta gravida at eget metus. Maecenas sed diam eget
+                        risus
+                        varius blandit.</p>
+                    <div class="d-flex w-100 justify-content-between">
+                        <small class="text-strong">Predrag Djurovic</small>
+                        <small class="text-muted">3 days ago</small>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-md-3"></div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+    console.log(window.location)
+    var loc = window.location
+    var wsStart = 'ws://'
+    if(loc.protocol == 'https:'){
+        wsStart = 'wss://'
+    }
+
+    var endpoint = wsStart + loc.host + loc.pathname
+
+    var socket = new WebSocket(endpoint)
+
+    socket.onmessage = function(e){
+        console.log("message", e)
+    }
+    socket.onopen = function(e){
+        console.log("open", e)
+    }
+    socket.onerror = function(e){
+        console.log("error", e)
+    }
+    socket.onclose = function(e){
+        console.log("close", e)
+    }
+
+</script>
+{% endblock %}
