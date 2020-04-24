@@ -195,7 +195,7 @@ EMAIL_PORT=2525
 
 RQ_QUEUES = {
     'default': {
-        'HOST': 'localhost',
+        'HOST': 'redis',
         'PORT': 6379,
         'DB': 0,
         'PASSWORD': '',
@@ -208,7 +208,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("localhost", 6379)],
+            "hosts": [("redis", 6379)],
         },
     },
 }

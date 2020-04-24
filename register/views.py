@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.utils.encoding import force_text
 from django.utils.http import urlsafe_base64_decode
 from django.views import View
-from djoser.conf import User
+from main.models import User
 
 from main.api.users.tokens import account_activation_token
 from .forms import RegisterForm, LoginForm

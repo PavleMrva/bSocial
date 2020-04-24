@@ -22,7 +22,6 @@ class PostCreateUpdateSerializer(ModelSerializer):
             'is_approved'
         ]
 
-
 class PostDetailSerializer(ModelSerializer):
     user = UserDetailSerializer(read_only=True)
     comments = SerializerMethodField()

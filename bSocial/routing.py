@@ -5,7 +5,6 @@ from channels.security.websocket import AllowedHostsOriginValidator, OriginValid
 
 from main.consumers import PostConsumer
 from django.urls import path
-from main.consumers import NoseyConsumer
 
 # application = ProtocolTypeRouter({
 #     # Empty for now (http->django views is added by default)
@@ -22,6 +21,6 @@ from main.consumers import NoseyConsumer
 
 application = ProtocolTypeRouter({
     "websocket": URLRouter([
-        path("notifications/", NoseyConsumer),
+        path("notifications/", PostConsumer),
     ])
 })

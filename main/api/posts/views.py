@@ -1,3 +1,5 @@
+from rq.job import Job
+
 from main.models import Post, Comment, UserFollowing, User
 from django.db.models import Q
 from rest_framework.filters import (
@@ -36,23 +38,23 @@ from django_rq import job
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
-@job
-def long_running():
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        "gossip", {"type": "user.gossip",
-                   "event": "New Post wololo",
-                   "username": 'pavle'})
-    pass
+# @job
+# def long_running(text):
+#     channel_layer = get_channel_layer()
+#     async_to_sync(channel_layer.group_send)(
+#         "post", {"type": "post.notif",
+#                    "event": "This user has created a new post",
+#                    "username": "text"})
+#     pass
 
 
 class PostCreateAPIView(CreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostCreateUpdateSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        long_running.delay()
+        # long_running.delay()
         serializer.save(user=self.request.user)
 
 

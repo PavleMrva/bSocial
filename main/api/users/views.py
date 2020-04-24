@@ -1,7 +1,6 @@
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
-from djoser import email
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
@@ -85,33 +84,33 @@ class Worker1TestAPIView(APIView):
 
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            "gossip", {"type": "user.gossip",
+            "post", {"type": "user.post",
                        "event": "New User",
                        "username": 'pavle'})
 
         return JsonResponse({'foo': 'bar'})
 
 
-@job
-def long_running_func():
-    user_obj = User(
-        first_name='suljsdfsdo3',
-        last_name='suljewssqfddsfc',
-        username='sufqswsdqqqf3',
-        email='sucqqqsfd3qqq3@gmail.com',
-        is_active=True,
-    )
-    user_obj.set_password('pavle')
-    user_obj.save()
+# @job
+# def long_running_func():
+#     user_obj = User(
+#         first_name='mqaaaqaarka',
+#         last_name='zvaaaqaaka',
+#         username='uquququququququq',
+#         email='hahahahahs@gmail.com',
+#         is_active=True,
+#     )
+#     user_obj.set_password('pavle')
+#     user_obj.save()
+#     channel_layer = get_channel_layer()
+#     async_to_sync(channel_layer.group_send)(
+#         "gossip", {"type": "user.notif",
+#                    "event": "New User has been created!",
+#                    "username": user_obj.username})
+#     pass
 
 
 class Worker2TestAPIView(APIView):
     def get(self, request, *args, **kwargs):
-        long_running_func.delay()
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-        "gossip", {"type": "user.gossip",
-                   "event": "New Post trololo",
-                   "username": 'pavle'})
-
+        # long_running_func.delay()
         return JsonResponse({'foolo': 'barlo'})
