@@ -3,6 +3,14 @@ from django.core.validators import RegexValidator
 from django.contrib.auth import password_validation, authenticate
 from rest_framework.exceptions import ValidationError
 from django.db.models import Q
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.sites.shortcuts import get_current_site
+from .tokens import account_activation_token
+from django.core.mail import EmailMessage
+from django.conf import settings
+from django.template.loader import render_to_string
+from django.utils.encoding import force_bytes
+from djoser import email
 from rest_framework.serializers import (
     ModelSerializer,
     HyperlinkedIdentityField,
@@ -89,6 +97,23 @@ class UserCreateSerializer(ModelSerializer):
         )
         user_obj.set_password(password)
         user_obj.save()
+        current_site = get_current_site(self.context['request'])
+        email_subject = "Activate your account"
+        message = render_to_string('register/activate.html',
+                                   {
+                                       'user': user_obj,
+                                       'domain': current_site.domain,
+                                       'uid': urlsafe_base64_encode(force_bytes(user_obj.pk)),
+                                       'token': account_activation_token.make_token(user_obj),
+                                   })
+
+        email_message = EmailMessage(
+            email_subject,
+            message,
+            settings.EMAIL_HOST_USER,
+            [email],
+        )
+        email_message.send()
         return validated_data
 
 

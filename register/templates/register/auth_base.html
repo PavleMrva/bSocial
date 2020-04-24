@@ -10,9 +10,32 @@
     {% bootstrap_css %}
     {% bootstrap_javascript jquery='full' %}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        function getCookie(name) {
+            var value = "; " + document.cookie;
+            var parts = value.split("; " + name + "=");
+            if (parts.length == 2) return parts.pop().split(";").shift();
+        }
+
+        function refresh() {
+            $.ajax({
+                url: "/api/token/refresh/",
+                type: 'POST',
+                data: {
+                    'refresh': getCookie("refresh")
+                },
+                error: function (err) {
+                    return
+                },
+                success: function (data) {
+                    window.location.href="/";
+                }
+            });
+        }
+    </script>
 </head>
 
-<body class="text-center">
+<body class="text-center" onload="refresh()">
     <div class="container">
         {% block content %}
 

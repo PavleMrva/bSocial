@@ -1,7 +1,10 @@
 {% extends 'register/auth_base.html' %}
 
 {% block content %}
-
+<div id="success" class="alert alert-success" style="display: none">
+    <span id="success-message"></span>
+    <a href="{% url 'login' %}" class="text-info">Log in here</a>
+</div>
 <form id="register-form" class="form-register col-md-8 m-auto" method="POST">
     <div id="error" class="alert alert-danger" style="display: none">
         <span id="error-message"></span>
@@ -82,12 +85,14 @@
                 data: data,
                 error: function (err) {
                     var message = ""
-                    for(m in err.responseJSON){
-                        message += err.responseJSON[m][0] + "<br>"
+                    if (err.responseJSON) {
+                        for (m in err.responseJSON) {
+                            message += err.responseJSON[m][0] + "<br>"
+                        }
                     }
 
                     message = message.substring(0, message.length - 4);
-                    
+
                     $("#error").show()
                     $("#error-message").html(message)
                     switch (err.status) {
@@ -99,12 +104,15 @@
                             //Something bad happened
                             break;
                     }
-                    console.log(err.responseJSON.username[0])
-                    $("#btn-submit").prop('disabled', false)
                 },
                 success: function (data) {
                     $("#error").hide()
                     console.log('Success')
+                    $("#success").show()
+                    $("#success-message").html("You have registered successfully!<br>Please activate your account via email.")
+                    $("#register-form").hide()
+                },
+                complete: function(){
                     $("#btn-submit").prop('disabled', false)
                 }
             });

@@ -31,4 +31,5 @@ urlpatterns = [
     path('api/users/', include("main.api.users.urls", namespace='user-api')),
     path('api/token/', TokenObtainPairView.as_view()),
     path('api/token/refresh/', TokenRefreshView.as_view()),
+    path('django-rq/', include('django_rq.urls')),
 ]
