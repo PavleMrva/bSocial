@@ -18,7 +18,6 @@ class PostCreateUpdateSerializer(ModelSerializer):
         model = Post
         fields = [
             'text',
-            'user',
             'is_approved'
         ]
 
@@ -58,11 +57,12 @@ class PostListSerializer(ModelSerializer):
             'text',
             'user',
             'is_approved',
+            'created_at',
             'following',
         ]
 
     def get_following(self, obj):
-        return UserFollowing.objects.filter(following=obj.user).exists()
+        return UserFollowing.objects.filter(follower=obj.user).exists()
 
 # class UserSerializer(ModelSerializer):
 #     name_regex = RegexValidator(r'^[a-zA-Z]*$', 'Only letters are allowed.')

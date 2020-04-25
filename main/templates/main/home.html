@@ -3,31 +3,50 @@
 {% block tile %}Posts{% endblock %}
 
 {% block content %}
-<div class="row mt-3">
+<div class="row mt-3  mb-3">
     <div class="col-md-3"></div>
     <div class="col-md-6">
-        <div class="card">
+        <form id="create_form">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Create New Post</h3>
+                </div>
+                <div class="card-body pb-0">
+                    <div class="form-group">
+                        <textarea class="form-control" name="text" id="text" cols="30" rows="3"
+                            placeholder="What's on your mind?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="is_public"><input class="from-control" type="checkbox" name="is_public"
+                                id="is_public">
+                            Do
+                            you want this post to be public?</label>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <input type="submit" class="btn btn-info" value="Submit">
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100">
             <div class="card-header">
-                <h3>Create New Post</h3>
+                <h6>Notifications</h6>
             </div>
-            <div class="card-body">
-                <textarea class="form-control" name="" id="" cols="30" rows="3"
-                          placeholder="What's on your mind?"></textarea>
-            </div>
-            <div class="card-footer">
-                <button type="submit" class="btn btn-info">Submit</button>
+            <div class="card-body overflow-auto" id="notifications">
+
             </div>
         </div>
     </div>
-    <div class="col-md-3"></div>
 </div>
-<div class="row mt-3">
+<div class="row">
     <div class="col-md-3"></div>
-    <div class="col-md-6">
+    <div class="col-md-6" id="posts">
         <div class="card">
             <div class="card-header d-flex justify-content-between">
-                <span class="align-middle">Ivan Kotlaja</span>
-                <span class="">10 minutes ago</span>
+                <span class="align-middle">Ivan Kotlaja <button class="btn btn-success btn-sm">Follow</button></span>
+                <span class="align-middle">10 minutes ago</span>
             </div>
             <div class="card-body">
                 <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eaque fuga itaque quaerat velit vitae?
@@ -46,22 +65,116 @@
 {% endblock %}
 
 {% block script %}
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const webSocketBridge = new channels.WebSocketBridge();
-      const nl = document.querySelector("#notifylist");
+<script>
+    $(document).ready(function () {
+        $("#create_form").submit(function (event) {
+            event.preventDefault();
+            make_post(this);
+        })
 
-      webSocketBridge.connect('/notifications/');
-      webSocketBridge.listen(function(action, stream) {
-        console.log("RESPONSE:", action);
-        if(action.event == "New User") {
-          var el = document.createElement("li");
-          el.innerHTML = `New user <b>${action.username}</b> has joined!`;
-          nl.appendChild(el);
-        }
-      })
-      document.ws = webSocketBridge; /* for debugging */
+        load_posts();
     })
-    </script>
-{% endblock %}
 
+    function load_posts() {
+        $.ajax({
+            url: "/api/posts/",
+            type: 'GET',
+            headers: { "Authorization": "Bearer " + getCookie('authorization') },
+            error: function (err) {
+                console.log(err)
+                if (err.responseJSON.code == "token_not_valid") {
+                    document.cookie = "authorization=''; expires=Fri, 31 Dec 2030 23:59:59 GMT;path=/";
+                    document.cookie = "refresh=''; expires=Fri, 31 Dec 2030 23:59:59 GMT;path=/";
+                    window.location.href = "/auth/login";
+                }
+
+            },
+            success: function (data) {
+                posts = data.results
+                $.each(posts, function (i) {
+                    follow_btn = ''
+                    if (posts[i].following) {
+                        follow_btn = '<button class="btn btn-success btn-sm follow_btn">follow</button>'
+                    } else {
+                        follow_btn = '<button class="btn btn-danger btn-sm follow_btn">unfollow</button>'
+                    }
+
+                    str = '<div class="card mb-3">' +
+                        '<div class="card-header d-flex justify-content-between">' +
+                        '<span class="align-middle">' + posts[i].user.first_name + ' ' + posts[i].user.last_name + ' ' + follow_btn + '</span>' +
+                        '<span class="">' + posts[i].created_at + '</span>' +
+                        '</div>' +
+                        '<div class="card-body">' +
+                        '<p>' + posts[i].text + '</p>' +
+                        '</div>' +
+                        '<div class="card-footer">' +
+                        '<div class="float-right">' +
+                        '<a href="' + posts[i].url + '"><span class="align-middle"><i class="fa fa-comment fa-lg text-info"></i> 2</span></a>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>';
+
+                    $("#posts").append(str)
+                })
+            }
+        });
+    }
+
+    function make_post(form_send) {
+        var form = $(form_send);
+        var data = form.serialize();
+        console.log(data)
+
+        $.ajax({
+            url: "/api/posts/create/",
+            type: 'POST',
+            data: data,
+            headers: { "Authorization": "Bearer " + getCookie('authorization') },
+            error: function (err) {
+                $("#error").show()
+                $("#error-message").html(err.responseJSON.detail)
+                switch (err.status) {
+                    case "400":
+                        // bad request
+                        break;
+                    case "401":
+                        // unauthorized
+                        break;
+                    case "403":
+                        // forbidden
+                        break;
+                    default:
+                        //Something bad happened
+                        break;
+                }
+                $("#btn-submit").prop('disabled', false)
+            },
+            success: function (data) {
+                console.log("POST SUCCESSFULLY CREATED")
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const webSocketBridge = new channels.WebSocketBridge();
+
+        webSocketBridge.connect("/notifications/");
+        webSocketBridge.listen(function (action, stream) {
+            console.log("RESPONSE:", action);
+            if (action.event === "New Post") {
+                load_posts();
+                var el = document.createElement("li");
+                el.innerHTML = `User <b>${action.username}</b> made a post: <b>${action.post_text}</b>!`;
+                $('#notifications').append(el);
+            } else if (action.event === "New Following"){
+                var el = document.createElement("li");
+                el.innerHTML = `User <b style="color: green">${action.follower}</b> started following you</b>!`;
+                $('#notifications').append(el);
+            }
+
+        })
+        document.ws = webSocketBridge; /* for debugging */
+    })
+
+</script>
+{% endblock %}

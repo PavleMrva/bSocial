@@ -3,6 +3,7 @@ from channels.auth import AuthMiddlewareStack
 from django.conf.urls import url
 from channels.security.websocket import AllowedHostsOriginValidator, OriginValidator
 
+from bSocial.channelsmiddleware import TokenAuthMiddleware
 from main.consumers import PostConsumer
 from django.urls import path
 
@@ -20,7 +21,13 @@ from django.urls import path
 # })
 
 application = ProtocolTypeRouter({
-    "websocket": URLRouter([
-        path("notifications/", PostConsumer),
-    ])
+    "websocket": AllowedHostsOriginValidator(
+        TokenAuthMiddleware(
+            URLRouter([
+                path("notifications/", PostConsumer),
+            ])
+        )
+    )
 })
+
+

@@ -54,7 +54,6 @@ class PostCreateAPIView(CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        # long_running.delay()
         serializer.save(user=self.request.user)
 
 
@@ -83,15 +82,17 @@ class PostListAPIView(ListAPIView):
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['text', 'user__username']
     pagination_class = PostPageNumberPagination
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self, *args, **kwargs):
         # followed_people = UserFollowing.objects.filter(user_id=self.request.user.id).values('following_user_id')
         # print(followed_people)
 
         queryset_list=Post.objects.filter(
+            is_public=False,
             user__following__follower=self.request.user.id,
             is_approved=True
-        ) | Post.objects.filter(is_public=True, is_approved=True).exclude(user=self.request.user.id)
+        ) | Post.objects.filter(is_public=True).exclude(user=self.request.user.id)
         
         query = self.request.GET.get("q")
         if query:

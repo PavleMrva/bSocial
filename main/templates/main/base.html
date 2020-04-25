@@ -35,7 +35,7 @@
                 success: function (data) {
                     var access = data.access
                     var refresh = data.refresh
-                    document.cookie = "token=" + access + "; expires=Fri, 31 Dec 2030 23:59:59 GMT;path=/";
+                    document.cookie = "authorization=" + access + "; expires=Fri, 31 Dec 2030 23:59:59 GMT;path=/";
                     document.cookie = "refresh=" + refresh + "; expires=Fri, 31 Dec 2030 23:59:59 GMT;path=/";
                     console.log("Success")
                 }

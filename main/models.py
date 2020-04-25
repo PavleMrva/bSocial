@@ -8,7 +8,7 @@ class Post(models.Model):
     text = models.TextField()
     created_at = models.DateTimeField(default=timezone.now)
     is_approved = models.BooleanField(default=False)
-    is_public = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
 
     def publish(self):
         self.save()
