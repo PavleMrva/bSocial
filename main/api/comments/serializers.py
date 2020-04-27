@@ -34,5 +34,4 @@ class CommentSerializer(ModelSerializer):
             'is_approved',
             'created_at'
         ]
-        ordering = ['created']
 

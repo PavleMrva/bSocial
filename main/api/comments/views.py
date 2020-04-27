@@ -46,21 +46,6 @@ class CommentDetailAPIView(RetrieveAPIView):
     serializer_class = CommentSerializer
 
 
-# class PostUpdateAPIView(RetrieveUpdateAPIView):
-#     queryset = Post.objects.all()
-#     serializer_class = PostCreateUpdateSerializer
-#     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-#
-#     def perform_update(self, serializer):
-#         serializer.save(user=self.request.user)
-
-
-# class PostDeleteAPIView(DestroyAPIView):
-#     queryset = Post.objects.all()
-#     serializer_class = PostDetailSerializer
-#     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-
-
 class CommentListAPIView(ListAPIView):
     serializer_class = CommentSerializer
 

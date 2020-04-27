@@ -140,7 +140,7 @@ class PostListAPIView(ListAPIView):
         queryset_list=Post.objects.filter(
             is_public=False,
             user__following__follower=self.request.user.id,
-        ) | Post.objects.filter(is_public=True).exclude(user=self.request.user.id)
+        ).distinct().order_by('-created_at') | Post.objects.filter(is_public=True).exclude(user=self.request.user.id).distinct().order_by('-created_at')
         
         query = self.request.GET.get("q")
         if query:

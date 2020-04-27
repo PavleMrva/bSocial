@@ -39,7 +39,7 @@ class PostDetailSerializer(ModelSerializer):
         ]
 
     def get_comments(self, obj):
-        c_qs = Comment.objects.filter_by_instance(obj)
+        c_qs = Comment.objects.filter_by_instance(obj).order_by('-created_at')
         comments = CommentSerializer(c_qs, many=True).data
         return comments
 
