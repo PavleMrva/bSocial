@@ -16,6 +16,7 @@ def register(response):
 def login(response):
     return render(response, "register/login.html")
 
+
 class ActivateAccountView(View):
     def get(self, request, uidb64, token):
         try:
@@ -28,5 +29,5 @@ class ActivateAccountView(View):
             user.is_active = True
             user.save()
             return redirect('login')
-        return render(request,'auth/activate_failed.html', status=401)
+        return render(request,'register/activate_failed.html', status=401)
 

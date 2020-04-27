@@ -24,7 +24,7 @@ from rest_framework.permissions import (
     IsAuthenticated,
     IsAdminUser,
     IsAuthenticatedOrReadOnly,
-)
+    AllowAny)
 
 from .permissions import IsOwnerOrReadOnly
 
@@ -34,19 +34,68 @@ from .serializers import (
     PostListSerializer,
 )
 
-from django_rq import job
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
+# from django_elasticsearch_dsl_drf.constants import (
+#     LOOKUP_FILTER_RANGE,
+#     LOOKUP_QUERY_GT,
+#     LOOKUP_QUERY_GTE,
+#     LOOKUP_QUERY_IN,
+#     LOOKUP_QUERY_LT,
+#     LOOKUP_QUERY_LTE,
+#     SUGGESTER_COMPLETION,
+# )
+# from django_elasticsearch_dsl_drf.filter_backends import (
+#     DefaultOrderingFilterBackend,
+#     FacetedSearchFilterBackend,
+#     FilteringFilterBackend,
+#     SearchFilterBackend,
+#     SuggesterFilterBackend,
+# )
+# from django_elasticsearch_dsl_drf.viewsets import DocumentViewSet
+#
+# from search.documents import PostDocument
+# from .serializers import PostDocumentSerializer
 
-# @job
-# def long_running(text):
-#     channel_layer = get_channel_layer()
-#     async_to_sync(channel_layer.group_send)(
-#         "post", {"type": "post.notif",
-#                    "event": "This user has created a new post",
-#                    "username": "text"})
-#     pass
-
+# class PostViewSet(DocumentViewSet):
+#     document = PostDocument
+#     serializer_class = PostDocumentSerializer
+#     permission_classes = [AllowAny]
+#     ordering = ('created_at',)
+#     lookup_field = 'id'
+#
+#     filter_backends = [
+#         DefaultOrderingFilterBackend,
+#         # FacetedSearchFilterBackend,
+#         # FilteringFilterBackend,
+#         # SearchFilterBackend,
+#         # SuggesterFilterBackend,
+#     ]
+#
+#     search_fields = (
+#         'text',
+#     )
+#
+#     # filter_fields = {
+#     #     'id': {
+#     #         'field': 'id',
+#     #         'lookups': [
+#     #             LOOKUP_FILTER_RANGE,
+#     #             LOOKUP_QUERY_IN,
+#     #             LOOKUP_QUERY_GT,
+#     #             LOOKUP_QUERY_GTE,
+#     #             LOOKUP_QUERY_LT,
+#     #             LOOKUP_QUERY_LTE,
+#     #         ],
+#     #     },
+#     # }
+#
+#     # suggester_fields = {
+#     #     'name_suggest': {
+#     #         'field': 'name.suggest',
+#     #         'suggesters': [
+#     #             SUGGESTER_COMPLETION,
+#     #         ],
+#     #     },
+#     # }
 
 class PostCreateAPIView(CreateAPIView):
     queryset = Post.objects.all()
@@ -81,7 +130,7 @@ class PostListAPIView(ListAPIView):
     serializer_class = PostListSerializer
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['text', 'user__username']
-    pagination_class = PostPageNumberPagination
+    pagination_class = PostLimitOffsetPagination
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self, *args, **kwargs):
@@ -91,7 +140,6 @@ class PostListAPIView(ListAPIView):
         queryset_list=Post.objects.filter(
             is_public=False,
             user__following__follower=self.request.user.id,
-            is_approved=True
         ) | Post.objects.filter(is_public=True).exclude(user=self.request.user.id)
         
         query = self.request.GET.get("q")
@@ -102,34 +150,3 @@ class PostListAPIView(ListAPIView):
             ).distinct()
         return queryset_list
 
-# Create your views here.
-# @api_view(['POST',])
-# def registration_view(request):
-#     if request.method == 'POST':
-#         serializer = RegiuserstrationSerializer(data=request.data)
-#         data = {}
-#         if serializer.is_valid():
-#             user = serializer.save()
-#             data['response'] = 'successfully registered a new user'
-#             data['email'] = user.email
-#             data['username'] = user.username
-#         else:
-#             data = serializer.errors
-#         return Response(data)
-#
-# class UserView(viewsets.ModelViewSet):
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
-#
-# class PostView(viewsets.ModelViewSet):
-#     queryset = Post.objects.all()
-#     serializer_class = PostSerializer
-#
-#
-# class CommentView(viewsets.ModelViewSet):
-#     queryset = Comment.objects.all()
-#     serializer_class = CommentSerializer
-#
-# class UserFollowingView(viewsets.ModelViewSet):
-#     queryset = UserFollowing.objects.all()
-#     serializer_class = UserFollowingSeliazer

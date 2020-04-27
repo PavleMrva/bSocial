@@ -7,8 +7,11 @@ class Post(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     text = models.TextField()
     created_at = models.DateTimeField(default=timezone.now)
-    is_approved = models.BooleanField(default=False)
-    is_public = models.BooleanField(default=True)
+    is_public = models.BooleanField(default=False)
+    
+    def FORMAT(self):
+        from django.utils.timesince import timesince
+        return timesince(self.created_at)
 
     def publish(self):
         self.save()
@@ -20,6 +23,9 @@ class Post(models.Model):
 class UserFollowing(models.Model):
     following = models.ForeignKey(User, related_name="following", on_delete=models.CASCADE)
     follower = models.ForeignKey(User, related_name="follower", on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ['follower', 'following']
 
 class CommentManager(models.Manager):
     def all(self):
@@ -35,12 +41,21 @@ class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     text = models.TextField()
-    is_approved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+    is_approved = models.BooleanField(default=True)
 
     objects = CommentManager()
 
+    def FORMAT(self):
+        from django.utils.timesince import timesince
+        return timesince(self.created_at)
+
     def approve(self):
         self.approved_comment = True
+        self.save()
+        
+    def disapprove(self):
+        self.approved_comment = False
         self.save()
 
     def __str__(self):

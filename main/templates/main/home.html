@@ -6,10 +6,13 @@
 <div class="row mt-3  mb-3">
     <div class="col-md-3"></div>
     <div class="col-md-6">
+        <div id="message">
+
+        </div>
         <form id="create_form">
             <div class="card">
                 <div class="card-header">
-                    <h3>Create New Post</h3>
+                    <h6>Create New Post</h6>
                 </div>
                 <div class="card-body pb-0">
                     <div class="form-group">
@@ -24,7 +27,7 @@
                     </div>
                 </div>
                 <div class="card-footer d-flex justify-content-between">
-                    <input type="submit" class="btn btn-info" value="Submit">
+                    <input id="btn-submit" type="submit" class="btn btn-info" value="Submit">
                 </div>
             </div>
         </form>
@@ -42,43 +45,48 @@
 </div>
 <div class="row">
     <div class="col-md-3"></div>
-    <div class="col-md-6" id="posts">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between">
-                <span class="align-middle">Ivan Kotlaja <button class="btn btn-success btn-sm">Follow</button></span>
-                <span class="align-middle">10 minutes ago</span>
-            </div>
-            <div class="card-body">
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eaque fuga itaque quaerat velit vitae?
-                    Asperiores, at ducimus ea esse explicabo facilis maiores nam non optio quas quia rem repellendus
-                    tempora?</p>
-            </div>
-            <div class="card-footer">
-                <div class="float-right">
-                    <a href="#"><span class="align-middle"><i class="fa fa-comment fa-lg text-info"></i> 2</span></a>
-                </div>
-            </div>
+    <div class="col-md-6">
+        <div id="posts">
+        </div>
+        <div class="text-center mt-3 mb-3" id="loading">
+            <button id="load_more" class="btn btn-info">Load more posts</button>
         </div>
     </div>
-    <div class="col-md-3"></div>
 </div>
 {% endblock %}
 
 {% block script %}
 <script>
+    var limit = 5
+    var offset = 0
     $(document).ready(function () {
+
         $("#create_form").submit(function (event) {
             event.preventDefault();
             make_post(this);
         })
 
-        load_posts();
+        $(document).on("click", ".follow_btn", function () {
+            follow(this);
+        })
+
+        load_posts(limit, offset)
+
+        $("#load_more").click(function () {
+            offset = offset + limit
+            $(this).attr('disabled', true)
+            setTimeout(function () {
+                action = 'active'
+                load_posts(limit, offset)
+            }, 1000)
+        })
     })
 
-    function load_posts() {
+    function load_posts(limit, offset) {
         $.ajax({
             url: "/api/posts/",
             type: 'GET',
+            data: { limit: limit, offset: offset },
             headers: { "Authorization": "Bearer " + getCookie('authorization') },
             error: function (err) {
                 console.log(err)
@@ -91,66 +99,126 @@
             },
             success: function (data) {
                 posts = data.results
-                $.each(posts, function (i) {
-                    follow_btn = ''
-                    if (posts[i].following) {
-                        follow_btn = '<button class="btn btn-success btn-sm follow_btn">follow</button>'
-                    } else {
-                        follow_btn = '<button class="btn btn-danger btn-sm follow_btn">unfollow</button>'
-                    }
+                if (posts.length === 0) {
+                    $("#load_more").hide()
+                    $("#loading").append("<p>No more posts</p>")
+                } else {
+                    $("#posts").append('')
+                    $.each(posts, function (i) {
+                        follow_btn = ''
+                        if (posts[i].following == false) {
+                            follow_btn = '<button data-id="' + posts[i].user.username + '" class="btn btn-success btn-sm follow_btn">follow</button>'
+                        } else {
+                            follow_btn = '<button data-id="' + posts[i].user.username + '" class="btn btn-danger btn-sm follow_btn">unfollow</button>'
+                        }
 
-                    str = '<div class="card mb-3">' +
-                        '<div class="card-header d-flex justify-content-between">' +
-                        '<span class="align-middle">' + posts[i].user.first_name + ' ' + posts[i].user.last_name + ' ' + follow_btn + '</span>' +
-                        '<span class="">' + posts[i].created_at + '</span>' +
-                        '</div>' +
-                        '<div class="card-body">' +
-                        '<p>' + posts[i].text + '</p>' +
-                        '</div>' +
-                        '<div class="card-footer">' +
-                        '<div class="float-right">' +
-                        '<a href="' + posts[i].url + '"><span class="align-middle"><i class="fa fa-comment fa-lg text-info"></i> 2</span></a>' +
-                        '</div>' +
-                        '</div>' +
-                        '</div>';
+                        str = '<div class="card mb-3">' +
+                            '<div class="card-header d-flex justify-content-between">' +
+                            '<span class="align-middle">' + posts[i].user.first_name + ' ' + posts[i].user.last_name + ' ' + follow_btn + '</span>' +
+                            '<span class="">' + posts[i].created_at + '</span>' +
+                            '</div>' +
+                            '<div class="card-body">' +
+                            '<p>' + posts[i].text + '</p>' +
+                            '</div>' +
+                            '<div class="card-footer">' +
+                            '<div class="float-right">' +
+                            '<a href="/post/' + posts[i].id + '"><span class="align-middle"><i class="fa fa-comment fa-lg text-info"></i></span></a>' +
+                            '</div>' +
+                            '</div>' +
+                            '</div>';
 
-                    $("#posts").append(str)
-                })
+                        $("#posts").append(str)
+                    })
+                }
+            },
+            complete: function () {
+                $("#load_more").attr('disabled', false)
             }
         });
     }
 
     function make_post(form_send) {
+        var text = $("#text").val()
+
+        if (text.length === 0) {
+            var message = '<div class="alert alert-danger alert-dismissible" id="error">' +
+                '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                'Post cannot be empty' +
+                '</div>';
+            $("#message").append(message);
+            return
+        }
+
         var form = $(form_send);
-        var data = form.serialize();
-        console.log(data)
+        var isChecked = $("input:checkbox").is(":checked") ? 1:0; 
+        var text = $("#text").val()
 
         $.ajax({
             url: "/api/posts/create/",
             type: 'POST',
-            data: data,
+            data: {
+                text: text,
+                is_public: isChecked
+            },
             headers: { "Authorization": "Bearer " + getCookie('authorization') },
+            beforeSend: function () {
+                $("#btn-submit").prop('disabled', true)
+            },
             error: function (err) {
-                $("#error").show()
-                $("#error-message").html(err.responseJSON.detail)
-                switch (err.status) {
-                    case "400":
-                        // bad request
-                        break;
-                    case "401":
-                        // unauthorized
-                        break;
-                    case "403":
-                        // forbidden
-                        break;
-                    default:
-                        //Something bad happened
-                        break;
-                }
-                $("#btn-submit").prop('disabled', false)
+                var message = '<div class="alert alert-danger alert-dismissible" id="error">' +
+                    '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                    err.responseJSON +
+                    '</div>';
+                $("#message").html(message);
             },
             success: function (data) {
-                console.log("POST SUCCESSFULLY CREATED")
+                var message = '<div class="alert alert-success alert-dismissible" id="error">' +
+                    '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                    'Post successfully created' +
+                    '</div>';
+                $("#message").html(message);
+                $(form_send).trigger("reset");
+            },
+            complete: function () {
+                $("#btn-submit").prop('disabled', false)
+            }
+        });
+    }
+
+    function follow(button) {
+        following = $(button).data("id");
+
+        $.ajax({
+            url: "/api/users/follow/",
+            type: 'POST',
+            data: {
+                'following': following + '',
+            },
+            headers: { "Authorization": "Bearer " + getCookie('authorization') },
+            error: function (err) {
+                $("#message").html(err.responseJSON.detail)
+            },
+            success: function (data) {
+                if (data.data === "following") {
+                    var message = '<div class="alert alert-success alert-dismissible" id="error">' +
+                        '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                        'You are now following <b>' + following + '</b>' +
+                        '</div>';
+                } else {
+                    var message = '<div class="alert alert-info alert-dismissible" id="error">' +
+                        '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                        'You are not following <b>' + following + '</b> anymore' +
+                        '</div>';
+                }
+                offset = 0
+                $("#posts").html('');
+                $("p").filter(":contains('No more posts')").remove()
+                $("#load_more").show();
+                load_posts(limit, offset);
+                $("#message").html(message);
+            },
+            complete: function () {
+                $("#btn-submit").prop('disabled', false)
             }
         });
     }
@@ -166,9 +234,13 @@
                 var el = document.createElement("li");
                 el.innerHTML = `User <b>${action.username}</b> made a post: <b>${action.post_text}</b>!`;
                 $('#notifications').append(el);
-            } else if (action.event === "New Following"){
+            } else if (action.event === "New Following") {
                 var el = document.createElement("li");
-                el.innerHTML = `User <b style="color: green">${action.follower}</b> started following you</b>!`;
+                el.innerHTML = `User <b style="color: green">${action.follower}</b> started following you!`;
+                $('#notifications').append(el);
+            } else if (action.event === "New Comment") {
+                var el = document.createElement("li");
+                el.innerHTML = `User <b style="color: green">${action.username}</b> has made a comment: <b style="color: green">${action.comment_text}</b> on your post: <b style="color: green">${action.post_text}</b> !`;
                 $('#notifications').append(el);
             }
 

@@ -1,6 +1,7 @@
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
@@ -35,10 +36,10 @@ from main.api.posts.permissions import IsOwnerOrReadOnly
 from .serializers import (
     UserCreateSerializer,
     UserLoginSerializer,
+    UserFollowsSerializer,
 )
 
-from main.models import User
-
+from main.models import User, UserFollowing
 
 from django.http import JsonResponse
 
@@ -75,42 +76,17 @@ class UserLoginAPIView(APIView):
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
 
-class Worker1TestAPIView(APIView):
-    def get(self, request, *args, **kwargs):
-        # redis_publisher = RedisPublisher(facility='foobar', broadcast=True)
-        # message = RedisMessage('Hello World AAAAAAA MUUUUUUUUUUU')
-        # # and somewhere else
-        # redis_publisher.publish_message(message)
-
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            "post", {"type": "user.post",
-                       "event": "New User",
-                       "username": 'pavle'})
-
-        return JsonResponse({'foo': 'bar'})
+class UserFollowingAPIView(CreateAPIView):
+    def post(self, request, format=None):
+        user = request.user
+        follow = User.objects.get(username=self.request.data.get('following'))
+        user_following = UserFollowing(following=follow, follower=user)
+        try:
+            user_following.save()
+            return JsonResponse(
+                {'status': status.HTTP_200_OK, 'data': "following", 'message': "follow" + str(follow.id)})
+        except:
+            UserFollowing.objects.get(following=follow, follower=user).delete()
+            return JsonResponse({'status': status.HTTP_200_OK, 'data': "unfollowing", 'message': "follow" + str(follow.id)})
 
 
-# @job
-# def long_running_func():
-#     user_obj = User(
-#         first_name='mqaaaqaarka',
-#         last_name='zvaaaqaaka',
-#         username='uquququququququq',
-#         email='hahahahahs@gmail.com',
-#         is_active=True,
-#     )
-#     user_obj.set_password('pavle')
-#     user_obj.save()
-#     channel_layer = get_channel_layer()
-#     async_to_sync(channel_layer.group_send)(
-#         "gossip", {"type": "user.notif",
-#                    "event": "New User has been created!",
-#                    "username": user_obj.username})
-#     pass
-
-
-class Worker2TestAPIView(APIView):
-    def get(self, request, *args, **kwargs):
-        # long_running_func.delay()
-        return JsonResponse({'foolo': 'barlo'})

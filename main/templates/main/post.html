@@ -6,52 +6,29 @@
 <div class="row mt-3">
     <div class="col-md-3"></div>
     <div class="col-md-6">
-        <div class="card">
+        <div id="message">
+
+        </div>
+        <div class="card" id="post_details">
             <div class="card-header d-flex justify-content-between">
-                <span class="align-middle">Ivan Kotlaja</span>
-                <span class="">10 minutes ago</span>
+                <span class="align-middle">{{ user.first_name }} {{ user.last_name }}</span>
+                <span class="">{{ post.created_at }}</span>
             </div>
             <div class="card-body">
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eaque fuga itaque quaerat velit vitae?
-                    Asperiores, at ducimus ea esse explicabo facilis maiores nam non optio quas quia rem repellendus
-                    tempora?</p>
+                <p>{{ post.text }}</p>
             </div>
             <div class="card-footer">
 
-                <div class="form-group">
-                <textarea class="form-control" name="" id="" cols="30" rows="3"
-                          placeholder="Comment here..."></textarea>
-                </div>
-                <button type="submit" class="btn btn-info">Reply</button>
+                <form action="" id="form_reply">
+                    <div class="form-group">
+                        <textarea class="form-control" name="text" id="text" cols="30" rows="3"
+                            placeholder="Comment here..."></textarea>
+                    </div>
+                    <button type="submit" id="btn-submit" class="btn btn-info">Reply</button>
+                </form>
             </div>
-            <div class="list-group">
-                <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
-                    <p class="mb-1">Donec id elit non mi porta gravida at eget metus. Maecenas sed diam eget
-                        risus
-                        varius blandit.</p>
-                    <div class="d-flex w-100 justify-content-between">
-                        <small class="text-strong">Predrag Djurovic</small>
-                        <small class="text-muted">3 days ago</small>
-                    </div>
-                </a>
-                <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
-                    <p class="mb-1">Donec id elit non mi porta gravida at eget metus. Maecenas sed diam eget
-                        risus
-                        varius blandit.</p>
-                    <div class="d-flex w-100 justify-content-between">
-                        <small class="text-strong">Predrag Djurovic</small>
-                        <small class="text-muted">3 days ago</small>
-                    </div>
-                </a>
-                <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
-                    <p class="mb-1">Donec id elit non mi porta gravida at eget metus. Maecenas sed diam eget
-                        risus
-                        varius blandit.</p>
-                    <div class="d-flex w-100 justify-content-between">
-                        <small class="text-strong">Predrag Djurovic</small>
-                        <small class="text-muted">3 days ago</small>
-                    </div>
-                </a>
+            <div class="list-group" id="comments_list">
+                
             </div>
         </div>
     </div>
@@ -62,28 +39,100 @@
 
 {% block script %}
 <script type="text/javascript">
-    console.log(window.location)
-    var loc = window.location
-    var wsStart = 'ws://'
-    if(loc.protocol == 'https:'){
-        wsStart = 'wss://'
+
+    $(document).ready(function () {
+        $("#form_reply").submit(function (event) {
+            event.preventDefault();
+            make_comment(this);
+        })
+
+        load_comments();
+    })
+
+    function load_comments() {
+        $.ajax({
+            url: "/api/posts/{{ post.id }}/",
+            type: 'GET',
+            headers: { "Authorization": "Bearer " + getCookie('authorization') },
+            error: function (err) {
+                console.log(err)
+                if (err.responseJSON.code == "token_not_valid") {
+                    document.cookie = "authorization=''; expires=Fri, 31 Dec 2030 23:59:59 GMT;path=/";
+                    document.cookie = "refresh=''; expires=Fri, 31 Dec 2030 23:59:59 GMT;path=/";
+                    window.location.href = "/auth/login";
+                }
+            },
+            success: function (data) {
+                $("#comments_list").html('')
+                comments = data.comments
+                if (comments.length === 0) {
+                    $("#comments_list").html('<p class="text-center">No comments</p>')
+                } else {
+                    $("#posts").append('')
+                    $.each(comments, function (i) {
+
+                        str = '<div class="list-group-item list-group-item-action flex-column align-items-start">' +
+                            '<p class="mb-1">' + comments[i].text + '</p>' +
+                            '<div class="d-flex w-100 justify-content-between">' +
+                            ' <small class="text-strong">' + data.user.first_name + ' ' + data.user.last_name + '</small>' +
+                            ' <small class="text-muted">' + comments[i].created_at + '</small>' +
+                            '</div>' +
+                            '</div>';
+
+                        $("#comments_list").append(str)
+                    })
+                }
+            },
+        });
     }
 
-    var endpoint = wsStart + loc.host + loc.pathname
+    function make_comment(form_send) {
+        var text = $("#text").val()
 
-    var socket = new WebSocket(endpoint)
+        if (text.length === 0) {
+            var message = '<div class="alert alert-danger alert-dismissible" id="error">' +
+                '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                'Comment cannot be empty' +
+                '</div>';
+            $("#message").append(message);
+            return
+        }
 
-    socket.onmessage = function(e){
-        console.log("message", e)
-    }
-    socket.onopen = function(e){
-        console.log("open", e)
-    }
-    socket.onerror = function(e){
-        console.log("error", e)
-    }
-    socket.onclose = function(e){
-        console.log("close", e)
+        var form = $(form_send);
+        var data = form.serialize();
+        console.log(data)
+
+        $.ajax({
+            url: "/api/comments/create/",
+            type: 'POST',
+            data: {
+                text: text,
+                post: '{{ post.id }}'
+            },
+            headers: { "Authorization": "Bearer " + getCookie('authorization') },
+            beforeSend: function () {
+                $("#btn-submit").prop('disabled', true)
+            },
+            error: function (err) {
+                var message = '<div class="alert alert-danger alert-dismissible" id="error">' +
+                    '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                    err.responseJSON.detail +
+                    '</div>';
+                $("#message").html(message);
+            },
+            success: function (data) {
+                load_comments()
+                var message = '<div class="alert alert-success alert-dismissible" id="error">' +
+                    '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                    'Comment successfully posted' +
+                    '</div>';
+                $("#message").html(message);
+                $(form_send).trigger("reset");
+            },
+            complete: function () {
+                $("#btn-submit").prop('disabled', false)
+            }
+        });
     }
 
 </script>

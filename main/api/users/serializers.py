@@ -1,6 +1,8 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import RegexValidator
 from django.contrib.auth import password_validation, authenticate
+from django.http import JsonResponse
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from django.db.models import Q
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -156,3 +158,17 @@ class UserLoginSerializer(ModelSerializer):
             
         data["token"] = "SOME RANDOM TOKEN"
         return data
+
+class UserFollowsSerializer(ModelSerializer):
+    following = CharField(max_length=200)
+
+    class Meta:
+        model = UserFollowing
+        fields = [
+            'following',
+        ]
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        following = User.objects.get(validated_data.get('following', None))
+        return UserFollowing.objects.create(following, user)

@@ -24,7 +24,7 @@ from search import views as search_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include("main.urls"), name='main_url'),
-    url(r'^search/', search_views.search, name='search'),
+    path('search/', search_views.search, name='search'),
     path('auth/', include("register.urls")),
     path('api/posts/', include("main.api.posts.urls", namespace='post-api')),
     path('api/comments/', include("main.api.comments.urls", namespace='comment-api')),

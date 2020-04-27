@@ -1,7 +1,17 @@
-<form method="get">
-    <input type="text" id="q" name="q" placeholder="Search">
-</form>
+{% extends "main/base.html" %}
 
-{% for item in posts %}
-    {{ item.text }}
-{% endfor %}
+{% block content %}
+<div class="row mt-3">
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+        <form method="get">
+            <input type="text" id="q" name="q" class="form-control" placeholder="Search">
+        </form>
+        
+        {% for item in posts %}
+        {{ item.text }}
+        {% endfor %}
+    </div>
+    <div class="col-md-3"></div>
+</div>
+{% endblock %}

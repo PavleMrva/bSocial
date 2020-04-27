@@ -1,15 +1,19 @@
 from django.core.validators import RegexValidator
 from django.contrib.auth import password_validation, authenticate
+from django.db.models import DateTimeField
+from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.serializers import (
     ModelSerializer,
     HyperlinkedIdentityField,
     SerializerMethodField,
 )
-from rest_framework.fields import CharField, BooleanField
+from rest_framework.fields import CharField, BooleanField, DateTimeField
 
 from main.models import Post, Comment, UserFollowing
 from main.api.comments.serializers import CommentSerializer
 from main.api.users.serializers import UserDetailSerializer
+from django_elasticsearch_dsl_drf.serializers import DocumentSerializer
+
 
 
 class PostCreateUpdateSerializer(ModelSerializer):
@@ -18,7 +22,7 @@ class PostCreateUpdateSerializer(ModelSerializer):
         model = Post
         fields = [
             'text',
-            'is_approved'
+            'is_public'
         ]
 
 class PostDetailSerializer(ModelSerializer):
@@ -31,7 +35,6 @@ class PostDetailSerializer(ModelSerializer):
             'id',
             'text',
             'user',
-            'is_approved',
             'comments',
         ]
 
@@ -47,6 +50,7 @@ class PostListSerializer(ModelSerializer):
     )
 
     user = UserDetailSerializer(read_only=True)
+    created_at = DateTimeField(format="%d/%m/%Y at %H:%M:%S", input_formats=None, default_timezone=None)
     following = SerializerMethodField()
 
     class Meta:
@@ -56,82 +60,22 @@ class PostListSerializer(ModelSerializer):
             'id',
             'text',
             'user',
-            'is_approved',
             'created_at',
             'following',
         ]
+        ordering = ['created_at']
 
     def get_following(self, obj):
-        return UserFollowing.objects.filter(follower=obj.user).exists()
+        return UserFollowing.objects.filter(follower=self.context['request'].user, following=obj.user).exists()
 
-# class UserSerializer(ModelSerializer):
-#     name_regex = RegexValidator(r'^[a-zA-Z]*$', 'Only letters are allowed.')
-#     first_name = serializers.CharField(max_length=60, required=True, validators=[name_regex])
-#     last_name = serializers.CharField(max_length=60, required=True, validators=[name_regex])
-#     email = serializers.EmailField(max_length=30, required=True)
-#
+# class PostDocumentSerializer(DocumentSerializer):
 #     class Meta:
-#         model = User
-#         fields = ('id', 'first_name', 'last_name', 'username', 'email')
-#
-#
-# class RegistrationSerializer(serializers.ModelSerializer):
-#     password = serializers.CharField(style={'input_type': 'password'}, write_only=True)
-#     password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
-#     name_regex = RegexValidator(r'^[a-zA-Z]*$', 'Only letters are allowed.')
-#     first_name = serializers.CharField(max_length=60, required=True, validators=[name_regex])
-#     last_name = serializers.CharField(max_length=60, required=True, validators=[name_regex])
-#
-#     class Meta:
-#         model = User
-#         fields = ['first_name', 'last_name', 'username', 'email', 'password', 'password2']
-#         extra_kwargs = {
-#             'password': {'write_only': True}
-#         }
-#
-#     def save(self):
-#         user = User(
-#             first_name = self.validated_data['first_name'],
-#             last_name = self.validated_data['last_name'],
-#             username = self.validated_data['username'],
-#             email = self.validated_data['email'],
-#         )
-#
-#         password = self.validated_data['password']
-#         password2 = self.validated_data['password2']
-#         # if self.validated_data['password'] != self.validated_data['password2']:
-#         #     raise serializers.ValidationError({'password': 'muu ne poklapa seee'})
-#         if password != password2:
-#             raise serializers.ValidationError({'password': 'Passwords must match.'})
-#         user.set_password(password)
-#         user.save()
-#         return user
-#
-# class LoginSerializer(serializers.ModelSerializer):
-#     token = CharField(allow_blank=True, read_only=True)
-#
-#     class Meta:
-#         model = User
-#         fields = ['username', 'email', 'password', 'token']
-#         extra_kwargs = {
-#             'password': {'write_only': True}
-#         }
-#
-#
-#
-# class PostSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Post
-#         fields = ('id', 'text', 'user', 'is_public', 'is_approved')
-#
-#
-# class CommentSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Comment
-#         fields = ('id', 'user_id', 'post_id', 'text', 'is_approved')
-#
-#
-# class UserFollowingSeliazer(serializers.ModelSerializer):
-#     class Meta:
-#         model = UserFollowing
-#         fields = ('user_id', 'following_user_id')
+#         document = PostDocument
+#         fields = [
+#             'url',
+#             'id',
+#             'text',
+#             'user',
+#             'created_at',
+#             'following',
+#         ]

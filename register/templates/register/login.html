@@ -50,30 +50,16 @@
 
             console.log(form);
 
-            $("#btn-submit").prop('disabled', true)
-
             $.ajax({
                 url: "/api/token/",
                 type: 'POST',
                 data: data,
+                beforeSend: function () {
+                    $("#btn-submit").prop('disabled', true)
+                },
                 error: function (err) {
                     $("#error").show()
                     $("#error-message").html(err.responseJSON.detail)
-                    switch (err.status) {
-                        case "400":
-                            // bad request
-                            break;
-                        case "401":
-                            // unauthorized
-                            break;
-                        case "403":
-                            // forbidden
-                            break;
-                        default:
-                            //Something bad happened
-                            break;
-                    }
-                    $("#btn-submit").prop('disabled', false)
                 },
                 success: function (data) {
                     $("#error").hide()
@@ -81,9 +67,11 @@
                     var refresh = data.refresh
                     document.cookie = "authorization="+access+"; expires=Fri, 31 Dec 2030 23:59:59 GMT;path=/";
                     document.cookie = "refresh="+refresh+"; expires=Fri, 31 Dec 2030 23:59:59 GMT;path=/";
-                    $("#btn-submit").prop('disabled', false)
                     document.location.href="/";
 
+                },
+                complete: function () {
+                    $("#btn-submit").prop('disabled', false)
                 }
             });
         })

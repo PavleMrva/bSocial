@@ -9,7 +9,11 @@ services:
     links:
     - redis
     - elasticsearch
-    command: python manage.py runserver 0.0.0.0:5000
+    command: bash -c "
+      python manage.py runserver 0.0.0.0:5000 &&
+      python manage.py search_index --create -f &&
+      python manage.py search_index --populate -f
+      "
     ports:
     - "5000:5000"
     - "8080:8080"

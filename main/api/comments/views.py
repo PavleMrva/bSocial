@@ -37,7 +37,6 @@ from main.models import Comment
 class CommentCreateAPIView(CreateAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentCreateUpdateSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
